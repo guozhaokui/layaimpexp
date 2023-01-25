@@ -12,6 +12,8 @@ class ObjectMoveX(bpy.types.Operator):
     bl_idname = "object.move_x"        # Unique identifier for buttons and menu items to reference.
     bl_label = "Move X by One"         # Display name in the interface.
     bl_options = {'REGISTER', 'UNDO'}  # Enable undo for the operator.
+    total: bpy.props.IntProperty(name="Steps", default=2, min=1, max=100)
+
 
     def execute(self, context):        # execute() is called when running the operator.
 
