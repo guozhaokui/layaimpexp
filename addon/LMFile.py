@@ -16,6 +16,8 @@ class MeshInfo:
         self.blocknum=0
         self.blocks=[]
         self.boneNames:list[str]=[]
+        self.vb=[]
+        self.ib=[]
         
 
 
@@ -97,7 +99,7 @@ class LMFile(object):
         return str.decode()
 
 
-    def parse(self, fileName:str):
+    def parse(self, fileName:str)->MeshInfo:
         self.__lmfile = open(fileName,"rb")
         self.__lmfile.seek(0, os.SEEK_END)
         self.__fileSize = self.__lmfile.tell()
@@ -143,11 +145,13 @@ class LMFile(object):
                 readFunc = getattr(self,'READ_'+name)
                 if(readFunc):readFunc(meshinfo)
 
+        return meshinfo
+
     def parsev05NoComp(self,off:int):
         pass
 
     def getVertexElementSize(self,type:str):
-        dict = {"POSITION":12,"NORMAL":12,"COLOR":16,"UV":8,"UV1":8,"BLENDWEIGHT":16,"BLENDINDICES":16,"TANGENT":16,"NORMAL_BYTE":4}
+        dict = {"POSITION":12,"NORMAL":12,"COLOR":16,"UV":8,"UV1":8,"BLENDWEIGHT":16,"BLENDINDICES":4,"TANGENT":16,"NORMAL_BYTE":4}
         return dict[type]
 
     def READ_MESH(self,meshinfo:MeshInfo):
@@ -194,6 +198,9 @@ class LMFile(object):
                 vertSize = vertexCnt*stride
                 self.seek(vbstart)
                 vb = self.__lmfile.read(vertSize)
+                for v in range(vertexCnt):
+                    vert = struct.unpack_from("fff", vb, v*stride)
+                    meshinfo.vb.append(vert)
                 #假设读完了
                 self.seek(vbstart+vertSize)
                 pass
@@ -201,9 +208,18 @@ class LMFile(object):
                 return RuntimeError()
                 pass
 
-            #假设读完ib了
+            #读ib
             self.seek(ibstart)
             ib = self.__lmfile.read(iblen)
+            if(shortIB):
+                for f in range(int(ibCnt/3)):
+                    face = struct.unpack_from('HHH',ib,f*3*2)
+                    meshinfo.ib.append(face)
+            else:
+                for f in range(int(ibCnt/3)):
+                    face = struct.unpack_from('HHH',ib,f*3*4)
+                    meshinfo.ib.append(face)
+            
             self.seek(ibstart+iblen)
 
             # bindpose是4x4的矩阵
@@ -235,3 +251,4 @@ class LMFile(object):
 if __name__ == "__main__":
     ff = LMFile()
     ff.parse('D:/work/layaimpexp/test/femalezhenghe-female0.lm')
+    pass

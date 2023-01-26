@@ -9,7 +9,7 @@ class BlenderImporter(object):
 
     def importLm(self, filename):
         lm = LMFile.LMFile()
-        lm.parse(filename)
+        meshinfo = lm.parse(filename)
 
         meshName = os.path.basename(filename)
         mesh = bpy.data.meshes.new(meshName)
@@ -22,7 +22,8 @@ class BlenderImporter(object):
             obj.location = bpy.context.scene.cursor.location
             bpy.context.collection.objects.link(obj)
 
-        mesh.from_pydata([(-1,-1,0),(1,-1,0),(1,1,0),(-1,1,0)],[],[(0,1,2,3)])
+        #mesh.from_pydata([(-1,-1,0),(1,-1,0),(1,1,0),(-1,1,0)],[],[(0,1,2,3)])
+        mesh.from_pydata(meshinfo.vb, [], meshinfo.ib)
 
     def importLH(self, filename):
         """"""
