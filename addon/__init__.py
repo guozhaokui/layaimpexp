@@ -1,5 +1,5 @@
 bl_info = {
-    "name": "Move X Axis",
+    "name": "LayaImporter",
     "blender": (2, 80, 0),
     "location": "File > Import > laya",
     "description": "Imports laya model",
@@ -12,6 +12,12 @@ import os
 import sys
 from bpy.props import *
 
+#调试期间用这个，否则找不到 BlenderImporter
+#真正运行的时候用zip应该没有问题
+# TODO
+sys.path.append('D:/work/layaimpexp/addon')
+
+import BlenderImporter
 
 from bpy_extras.io_utils import (
         ImportHelper,
@@ -48,11 +54,8 @@ class ObjectMoveX(bpy.types.Operator,ImportHelper):
         paths = [os.path.join(self.directory, name.name)
                  for name in self.files]
 
-        # The original script
-        scene = context.scene
-        for obj in scene.objects:
-            obj.location.x += 1.0
-
+        imp = BlenderImporter.BlenderImporter()
+        imp.importLm(self.filepath)
         return {'FINISHED'}            # Lets Blender know the operator finished successfully.
 
 # def menu_func(self, context):

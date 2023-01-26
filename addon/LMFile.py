@@ -192,6 +192,8 @@ class LMFile(object):
             #读vb信息
             if meshinfo.isV05 and not meshinfo.isCompress:
                 vertSize = vertexCnt*stride
+                self.seek(vbstart)
+                vb = self.__lmfile.read(vertSize)
                 #假设读完了
                 self.seek(vbstart+vertSize)
                 pass
@@ -200,9 +202,13 @@ class LMFile(object):
                 pass
 
             #假设读完ib了
+            self.seek(ibstart)
+            ib = self.__lmfile.read(iblen)
             self.seek(ibstart+iblen)
 
             # bindpose是4x4的矩阵
+            self.seek(meshinfo.data.off+bindPoseStart)
+            bindpose = self.__lmfile.read(bindPoseLen)
             #假设读完了
             self.seek(meshinfo.data.off+bindPoseStart+bindPoseLen)
             pass
@@ -212,9 +218,20 @@ class LMFile(object):
         return meshinfo.strings[self.readU16()]
 
     def READ_SUBMESH(self,meshinfo:MeshInfo):        
+        unk = self.readU16()
+        ibStart = self.readU32()
+        ibCnt = self.readU32()
+        drawCnt = self.readU16()
+        for i in range(drawCnt):
+            ibstart = self.readU32()
+            ibcnt = self.readU32()
+            bonedicoffs = self.readU32()
+            bonediccnt = self.readU32()
+        pass
+    def READ_UVSIZE(self, meshinfo:MeshInfo):
         pass
 
 ##test
 if __name__ == "__main__":
     ff = LMFile()
-    ff.parse('D:/work/layaimpexp/test/muzhalan.lm')
+    ff.parse('D:/work/layaimpexp/test/femalezhenghe-female0.lm')
