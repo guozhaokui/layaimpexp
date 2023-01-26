@@ -6,6 +6,25 @@ class ChunkInfo:
         self.off=off
         self.size=size
 
+class VertexDeclaration:
+    elementSize = {"POSITION":12,"NORMAL":12,"COLOR":16,"UV":8,"UV1":8,"BLENDWEIGHT":16,"BLENDINDICES":4,"TANGENT":16,"NORMAL_BYTE":4}
+
+    def __init__(self,declStr:str) -> None:
+        self.declstr=declStr
+        flags = str.split(declStr,',')
+        stride=0
+        self.vertele={}
+        for i in flags:
+            if(self.elementSize[i]==None):
+                raise Exception("不支持的顶点元素")
+                pass
+            else:
+                elesize = self.elementSize[i]
+                self.vertele[i]=(stride,elesize)
+                stride+=elesize
+        self.stride = stride
+
+
 class MeshInfo:
     def __init__(self) -> None:
         self.isV05=False
@@ -18,6 +37,9 @@ class MeshInfo:
         self.boneNames:list[str]=[]
         self.vb=[]
         self.ib=[]
+        self.uv0=[]
+        self.uv1=[]
+        self.vertexDecl:VertexDeclaration=None
         
 
 
@@ -150,15 +172,12 @@ class LMFile(object):
     def parsev05NoComp(self,off:int):
         pass
 
-    def getVertexElementSize(self,type:str):
-        dict = {"POSITION":12,"NORMAL":12,"COLOR":16,"UV":8,"UV1":8,"BLENDWEIGHT":16,"BLENDINDICES":4,"TANGENT":16,"NORMAL_BYTE":4}
-        return dict[type]
-
     def READ_MESH(self,meshinfo:MeshInfo):
         strings = meshinfo.strings
         name= strings[self.readU16()]
         vbcount = self.readU16()
         dataoff =  meshinfo.data.off
+        # TODO 多个vb的还没做
         for i in range(vbcount):
             vbstart = dataoff+self.readU32()
             vertexCnt = self.readU32()
@@ -167,10 +186,8 @@ class LMFile(object):
                 shortIB=False
 
             vertexFlags = self.readIdxString(meshinfo)
-            flags = str.split(vertexFlags,',')
-            stride=0
-            for j in flags:
-                stride+=self.getVertexElementSize(j)
+            meshinfo.vertexDecl = VertexDeclaration(vertexFlags)
+            stride=meshinfo.vertexDecl.stride
 
             #下面是ib信息
             ibstart = meshinfo.data.off + self.readU32()
@@ -198,9 +215,17 @@ class LMFile(object):
                 vertSize = vertexCnt*stride
                 self.seek(vbstart)
                 vb = self.__lmfile.read(vertSize)
+                hasuv = 'UV' in meshinfo.vertexDecl.vertele
+                uvoff=0
+                if hasuv:
+                    uvoff = meshinfo.vertexDecl.vertele['UV'][0]
                 for v in range(vertexCnt):
                     vert = struct.unpack_from("fff", vb, v*stride)
                     meshinfo.vb.append(vert)
+
+                    if(hasuv):
+                        uv = struct.unpack_from('ff',vb,v*stride+uvoff)
+                        meshinfo.uv0.append(uv)
                 #假设读完了
                 self.seek(vbstart+vertSize)
                 pass
@@ -250,5 +275,5 @@ class LMFile(object):
 ##test
 if __name__ == "__main__":
     ff = LMFile()
-    ff.parse('D:/work/layaimpexp/test/femalezhenghe-female0.lm')
+    ff.parse('D:/work/layaimpexp/test/muzhalan.lm')
     pass
