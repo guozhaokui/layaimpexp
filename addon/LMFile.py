@@ -173,11 +173,9 @@ class LMFile(object):
                 name = strings[idx]
                 readFunc = getattr(self,'READ_'+name)
                 if(readFunc):readFunc(meshinfo)
-
+        else:
+            print ( "不支持的版本", flag)
         return meshinfo
-
-    def parsev05NoComp(self,off:int):
-        pass
 
     def READ_MESH(self,meshinfo:MeshInfo):
         strings = meshinfo.strings
