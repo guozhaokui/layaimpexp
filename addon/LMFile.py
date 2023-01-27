@@ -1,5 +1,6 @@
 import os
 import struct
+import Float16
 
 class ChunkInfo:
     def __init__(self,off=0,size=0) -> None:
@@ -11,7 +12,7 @@ class VertexDeclaration:
 
     def __init__(self,declStr:str) -> None:
         self.declstr=declStr
-        flags = str.split(declStr,',')
+        flags = self.elements = str.split(declStr,',')
         stride=0
         self.vertele={}
         for i in flags:
@@ -39,6 +40,12 @@ class MeshInfo:
         self.ib=[]
         self.uv0=[]
         self.uv1=[]
+        self.normal=[]
+        self.tangent=[]
+        self.binnormal=[]
+        self.color=[]
+        self.boneidx=[]
+        self.boneweight=[]
         self.vertexDecl:VertexDeclaration=None
         
 
@@ -211,28 +218,90 @@ class LMFile(object):
 
 
             #读vb信息
-            if meshinfo.isV05 and not meshinfo.isCompress:
-                vertSize = vertexCnt*stride
-                self.seek(vbstart)
-                vb = self.__lmfile.read(vertSize)
-                hasuv = 'UV' in meshinfo.vertexDecl.vertele
-                uvoff=0
-                if hasuv:
-                    uvoff = meshinfo.vertexDecl.vertele['UV'][0]
-                for v in range(vertexCnt):
-                    vert = struct.unpack_from("fff", vb, v*stride)
-                    meshinfo.vb.append(vert)
+            if meshinfo.isV05:
+                if meshinfo.isCompress:
+                    f16 = Float16.HalfFloatUtils()
+                    #保存的是简单压缩后的数据，需要边读边解
+                    elements = meshinfo.vertexDecl.elements
+                    self.seek(vbstart)
+                    for vt in range(vertexCnt):
+                        for ele in elements:
+                            if(ele=="POSITION"):
+                                #pos用的是半精度浮点数
+                                v = self.readU16()
+                                x = f16.convertToNumber(v)
+                                v = self.readU16()
+                                y = f16.convertToNumber(v)
+                                v = self.readU16()
+                                z = f16.convertToNumber(v)
+                                meshinfo.vb.append((x,y,z))
+                                pass
+                            elif(ele=="NORMAL"):
+                                #normal是uint8[3]
+                                vx = self.readU8()
+                                vy = self.readU8()
+                                vz = self.readU8()
+                                meshinfo.normal.append((vx/127.5-1,vy/127.5-1,vz/127.5-z))
+                                pass
+                            elif(ele=="COLOR"):
+                                #color是uint8[4]
+                                r=self.readU8() 
+                                g=self.readU8()
+                                b=self.readU8()
+                                a=self.readU8()
+                                meshinfo.color.append((r/255.0,g/255.0,b/255.0,a/255.0))
+                                pass
+                            elif(ele=="UV"):
+                                #uv是float16
+                                u = self.readU16()
+                                v = self.readU16()
+                                meshinfo.uv0.append((f16.convertToNumber(u),f16.convertToNumber(v)))
+                                pass
+                            elif(ele=="UV1"):
+                                u = self.readU16()
+                                v = self.readU16()
+                                meshinfo.uv1.append((f16.convertToNumber(u),f16.convertToNumber(v)))
+                                pass
+                            elif(ele=="BLENDWEIGHT"):
+                                # uint8[4]
+                                w1 = self.readU8()
+                                w2 = self.readU8()
+                                w3 = self.readU8()
+                                w4 = self.readU8()
+                                meshinfo.boneweight.append((w1/255.0,w2/255.0,w3/255.0,w4/255.0))
+                                pass
+                            elif(ele=="BLENDINDICES"):
+                                i1 = self.readU8()
+                                i2 = self.readU8()
+                                i3 = self.readU8()
+                                i4 = self.readU8()
+                                meshinfo.boneidx.append((i1,i2,i3,i4))
+                                pass
+                            elif(ele=="TANGENT"):
+                                #同normal
+                                vx = self.readU8()
+                                vy = self.readU8()
+                                vz = self.readU8()
+                                vw = self.readU8()
+                                meshinfo.tangent.append((vx/127.5-1,vy/127.5-1,vz/127.5-1,vw/127.5-1))
+                else:
+                    vertSize = vertexCnt*stride
+                    self.seek(vbstart)
+                    vb = self.__lmfile.read(vertSize)
+                    hasuv = 'UV' in meshinfo.vertexDecl.vertele
+                    uvoff=0
+                    if hasuv:
+                        uvoff = meshinfo.vertexDecl.vertele['UV'][0]
+                    for v in range(vertexCnt):
+                        vert = struct.unpack_from("fff", vb, v*stride)
+                        meshinfo.vb.append(vert)
 
-                    if(hasuv):
-                        uv = struct.unpack_from('ff',vb,v*stride+uvoff)
-                        meshinfo.uv0.append(uv)
-                #假设读完了
-                self.seek(vbstart+vertSize)
-                pass
-            if meshinfo.isCompress:
-                return RuntimeError()
-                pass
-
+                        if(hasuv):
+                            uv = struct.unpack_from('ff',vb,v*stride+uvoff)
+                            meshinfo.uv0.append(uv)
+                    #假设读完了
+                    self.seek(vbstart+vertSize)
+                    pass
             #读ib
             self.seek(ibstart)
             ib = self.__lmfile.read(iblen)
@@ -275,5 +344,6 @@ class LMFile(object):
 ##test
 if __name__ == "__main__":
     ff = LMFile()
-    ff.parse('D:/work/layaimpexp/test/muzhalan.lm')
+    #ff.parse('D:/work/layaimpexp/test/muzhalan.lm')
+    ff.parse('D:/work/air3_layame/LayaMetaX/dist/res/layaverse/ceshi/shinei/shinei.lm')
     pass
