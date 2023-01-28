@@ -55,7 +55,11 @@ class ObjectMoveX(bpy.types.Operator,ImportHelper):
                  for name in self.files]
 
         imp = BlenderImporter.BlenderImporter()
-        imp.importLm(self.filepath)
+        ext:str = os.path.splitext(self.filepath)[-1]
+        if(ext.lower()=='.lh'):
+            imp.importLH(self.filepath)
+        elif(ext.lower()=='.lm'):
+            imp.importLm(self.filepath)
         return {'FINISHED'}            # Lets Blender know the operator finished successfully.
 
 # def menu_func(self, context):
