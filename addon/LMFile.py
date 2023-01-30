@@ -309,7 +309,7 @@ class LMFile(object):
                     meshinfo.ib.append(face)
             else:
                 for f in range(int(ibCnt/3)):
-                    face = struct.unpack_from('HHH',ib,f*3*4)
+                    face = struct.unpack_from('III',ib,f*3*4)
                     meshinfo.ib.append(face)
             
             self.seek(ibstart+iblen)
@@ -343,5 +343,6 @@ class LMFile(object):
 if __name__ == "__main__":
     ff = LMFile()
     #ff.parse('D:/work/layaimpexp/test/muzhalan.lm')
-    ff.parse('D:/work/air3_layame/LayaMetaX/dist/res/layaverse/ceshi/shinei/shinei.lm')
+    ff.parse('D:/work/layaimpexp/test/tifa/Mesh/mesh_null_95.lm')
+    #ff.parse('D:/work/air3_layame/LayaMetaX/dist/res/layaverse/ceshi/shinei/shinei.lm')
     pass
