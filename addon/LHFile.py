@@ -2,6 +2,8 @@
 import json
 import os
 
+from addon.LMFile import LMFile
+
 class Vector3:
     def __init__(self,x=0,y=0,z=0):
         self.x=x
@@ -84,10 +86,72 @@ class SkinnedMeshRenderer(MeshRenderer):
         self.rootBone=None
         pass
 
+class Texture:
+    def __init__(self):
+        self.linear=False
+        self.image=''
+        pass
 
 class Material:
     def __init__(self):
+        self._src=''
+        self.diffuseColor=0
+        self.diffuseTexture=None
+        self.normalTexture=None
+        self.emissionTexture=None
+        self.metallicValue=0
+        self.metallicTexture=(None,'r') #贴图，通道. type()==tuple
+        self.smoothValue=0
+        self.smoothTexture=None
+
+    @property
+    def src(self):
+        return self._src
+
+    @src.setter
+    def src(self,url:str):
+        self._src=url
+        self.parseMtl(url)
+
+    def parseMtl(self,url:str):
+        f = open(url,'r')
+        data = f.read()
+        fobj = json.loads(data)
+        if "version" in fobj:
+            ver = fobj['version']
+            if ver=='LAYAMATERIAL:04':
+                self.parse04(fobj)
+            elif ver=='LAYAMATERIAL:02':
+                self.parse02(fobj)
+            elif ver=='LAYAMATERIAL:03':
+                self.parse03(fobj)
         pass
+
+    def parse02(self,obj):
+        props = obj['props']
+        type = props['type']
+        pass
+    def parse03(self,obj):
+        props = obj['props']
+        type = props['type']
+        textures = props['textures']
+        if type=='Laya.LayaMePBRMergeMaterial':
+            for t in textures:
+                name=t['name']
+                path=t['path']
+                if name=='u_MergeTexture':
+                    pass
+                if name=='u_MergeTexture1':
+                    pass
+            pass
+        else:
+            pass
+        pass
+    def parse04(self,obj):
+        pass
+
+class Material04:
+    pass
 
 class Sprite3D:
     def __init__(self):
@@ -106,6 +170,39 @@ class RefObj:
         self.refid=refid
         RefObj.AllRefObj.append(self)
 
+class Assets:
+    def __init__(self):
+        self.mtls={}
+        self.imgs={}
+        self.meshes={}
+
+    def getAsset(self,url:str):
+        url = os.path.normpath(url)
+        ext:str = (os.path.splitext(url)[-1]).lower()
+        if ext=='.lh':
+            pass
+        elif ext=='.lmat':
+            if( url in self.mtls):
+                pass
+            mtl = Material()
+            mtl.parseMtl(url)
+            self.mtls[url]=mtl
+        elif ext=='.lm':
+            mesh = LMFile()
+            meshinfo = mesh.parse(url)
+            self.meshes[url]=meshinfo
+        elif ext=='.png':
+            self.imgs[url]=url
+        elif ext=='.jpg':
+            self.imgs[url]=url
+        
+
+    def getMesh(file:str):
+        pass
+    def getMtl(file:str):
+        pass
+
+assetsMgr = Assets()
 
 class LHFile:
     """
@@ -114,7 +211,14 @@ class LHFile:
     加载所有相关的贴图文件
     具体的blender对象在BlenderImporter中实现
     """
+    def __init__(self) -> None:
+        self.lhfile=''
+        # lh所在目录
+        self.lhpath=''
+        
     def parse(self,file:str):
+        self.lhfile=file
+        self.lhpath = os.path.dirname(file)
         f = open(file,'r')
         data = f.read()
         fobj = json.loads(data)
@@ -191,7 +295,10 @@ class LHFile:
                         cc._id=obj[i]
                         pass
                     elif i=='_$uuid':
-                        cc.src=obj[i]
+                        src = obj[i]
+                        abssrc = os.path.normpath(os.path.join(self.lhpath,src))
+                        assetsMgr.getAsset(abssrc)
+                        #cc.src=abssrc
                         pass
                     elif i=='_$ref':
                         pass
@@ -245,6 +352,6 @@ class LHFile:
 if __name__ == "__main__":
     ff = LHFile()
     #ff.parse('D:/work/layaimpexp/test/muzhalan.lm')
-    ff.parse('D:/work/air3_layame/LayaMetaX/dist/res/face/head/head.lh')    #3.0
+    ff.parse('D:/work/laya/air3_layame/LayaMetaX/dist/res/face/head/head.lh')    #3.0
     #ff.parse('D:/work/air3_layame/LayaMetaX/dist/res/layaverse/weiqiang/weiqiang7.lh')  #2.0
     pass    
