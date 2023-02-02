@@ -26,7 +26,7 @@ class VertexDeclaration:
         self.stride = stride
 
 
-class MeshInfo:
+class Mesh:
     def __init__(self) -> None:
         self.isV05=False
         self.isCompress=False
@@ -128,12 +128,12 @@ class LMFile(object):
         return str.decode()
 
 
-    def parse(self, fileName:str)->MeshInfo:
+    def parse(self, fileName:str)->Mesh:
         self.__lmfile = open(fileName,"rb")
         self.__lmfile.seek(0, os.SEEK_END)
         self.__fileSize = self.__lmfile.tell()
         self.__lmfile.seek(0, os.SEEK_SET)
-        meshinfo = MeshInfo()
+        meshinfo = Mesh()
         # 字符串长度
         flaglen = self.readU16()
         flag = meshinfo.version = self.readString(flaglen)
@@ -177,7 +177,7 @@ class LMFile(object):
             print ( "不支持的版本", flag)
         return meshinfo
 
-    def READ_MESH(self,meshinfo:MeshInfo):
+    def READ_MESH(self,meshinfo:Mesh):
         strings = meshinfo.strings
         name= strings[self.readU16()]
         vbcount = self.readU16()
@@ -322,10 +322,10 @@ class LMFile(object):
             pass
         pass
 
-    def readIdxString(self,meshinfo:MeshInfo):
+    def readIdxString(self,meshinfo:Mesh):
         return meshinfo.strings[self.readU16()]
 
-    def READ_SUBMESH(self,meshinfo:MeshInfo):        
+    def READ_SUBMESH(self,meshinfo:Mesh):        
         unk = self.readU16()
         ibStart = self.readU32()
         ibCnt = self.readU32()
@@ -336,7 +336,7 @@ class LMFile(object):
             bonedicoffs = self.readU32()
             bonediccnt = self.readU32()
         pass
-    def READ_UVSIZE(self, meshinfo:MeshInfo):
+    def READ_UVSIZE(self, meshinfo:Mesh):
         pass
 
 ##test
