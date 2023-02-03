@@ -1,7 +1,6 @@
 
 import json
 import os
-from turtle import pos, position
 
 import LMFile
 from LMFile import Mesh
