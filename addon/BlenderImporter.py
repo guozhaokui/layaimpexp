@@ -167,102 +167,94 @@ class BlenderImporter(object):
         # obj.rotation_quaternion = rot
         # obj.scale = scale
 
+    def testAddBones():
+        context = bpy.context
+
+        bones = {}
+        # XYZ coordinates of bone head in armature space, WXYZ rotation in quaternions 
+        bones["Bone"] = ((-1.48222, -0.194431, -0.383472), (0.953425, 0.01901, -0.300824, 0.011176))
+        # 骨骼的方向是y方向，所以子的y位置决定了骨骼的长度
+        bones["Bone.001"] = ((0, 3.3363, 0), (0.35458, -0.269697, 0.157483, -0.881326))
+        bones["Bone.002"] = ((0, 4.0228, 0), (0.074972, -0.432144, 0.202091, -0.875666))
+        bones["Bone.002_nub"] = ((0, 4.7955, 0), (1, 0, 0, 0))
+
+        armature = bpy.data.armatures.new("Armature")
+        rig = bpy.data.objects.new("Armature", armature)
+        context.scene.collection.objects.link(rig)
+
+        context.view_layer.objects.active = rig
+        bpy.ops.object.editmode_toggle()
+
+        for i, bone in enumerate(bones.items()):
+            # create new bone
+            current_bone = armature.edit_bones.new(bone[0])
+            
+            # first bone in chain
+            if i == 0:
+                # create bone at armature origin and set its length
+                current_bone.head = [0, 0, 0]
+                length = list(bones.values())[i+1][0][1]    #子的[0][1]即position.y 是骨骼的长度
+                current_bone.tail = [0, 0, length]
+
+                # rotate bone
+                quat_armature_space = Quaternion(bone[1][1])
+                current_bone.transform(quat_armature_space.to_matrix())
+                
+                # set position
+                current_bone.translate(Vector(bone[1][0]))
+
+                # save bone, its tail position (next bone will be moved to it) and quaternion rotation
+                parent_bone = current_bone
+                parent_bone_tail = current_bone.tail
+                parent_bone_quat_armature_space = quat_armature_space
+                
+            # last bone in chain
+            elif i == (len(bones) - 1):
+                # create bone at armature origin and set its length
+                current_bone.head = [0, 0, 0]
+                current_bone.tail = [0, 0, 1]   #在父骨骼空间的位置
+                
+                # rotate bone
+                current_bone_quat_parent_space = Quaternion(bone[1][1])
+                # like matrices, quaternions can be multiplied to accumulate rotational values
+                transform_quat = parent_bone_quat_armature_space @ current_bone_quat_parent_space
+                current_bone.transform(transform_quat.to_matrix())
+
+                # set position
+                current_bone.translate(Vector(parent_bone_tail))
+                
+                # connect
+                current_bone.parent = parent_bone
+                current_bone.use_connect = True
+                
+            else:
+                # create bone at armature origin and set its length
+                current_bone.head = [0, 0, 0]
+                length = list(bones.values())[i+1][0][1]
+                current_bone.tail = [0, 0, length]
+                
+                # rotate bone
+                current_bone_quat_parent_space = Quaternion(bone[1][1])
+                # like matrices, quaternions can be multiplied to accumulate rotational values
+                transform_quat = parent_bone_quat_armature_space @ current_bone_quat_parent_space
+                current_bone.transform(transform_quat.to_matrix())
+                
+                # set position
+                current_bone.translate(Vector(parent_bone_tail))
+                
+                # connect
+                current_bone.parent = parent_bone
+                current_bone.use_connect = True
+                
+                # save bone, its tail position (next bone will be moved to it) and quaternion rotation
+                parent_bone = current_bone
+                parent_bone_tail = current_bone.tail
+                parent_bone_quat_armature_space = transform_quat
+
+        bpy.ops.object.editmode_toggle()
+
+
     def importLH(self, filename):
         lh = LHFile.LHFile()
         lh.parse(filename)
         """"""
-
-
-'''
-创建bone的代码
-context = bpy.context
-
-bones = {}
-# XYZ coordinates of bone head in armature space, WXYZ rotation in quaternions 
-bones["Bone"] = ((-1.48222, -0.194431, -0.383472), (0.953425, 0.01901, -0.300824, 0.011176))
-# XYZ coordinates of bone head in parent bone space, WXYZrotation in quaternions
-bones["Bone.001"] = ((0, 3.3363, 0), (0.35458, -0.269697, 0.157483, -0.881326))
-# XYZ coordinates of bone head in parent bone space, WXYZ rotation in quaternions
-bones["Bone.002"] = ((0, 4.0228, 0), (0.074972, -0.432144, 0.202091, -0.875666))
-# XYZ coordinates of bone head in parent bone space, WXYZ rotation in quaternions
-bones["Bone.002_nub"] = ((0, 4.7955, 0), (1, 0, 0, 0))
-
-armature = bpy.data.armatures.new("Armature")
-rig = bpy.data.objects.new("Armature", armature)
-context.scene.collection.objects.link(rig)
-
-context.view_layer.objects.active = rig
-bpy.ops.object.editmode_toggle()
-
-for i, bone in enumerate(bones.items()):
-    # create new bone
-    current_bone = armature.edit_bones.new(bone[0])
-    
-    # first bone in chain
-    if i == 0:
-        # create bone at armature origin and set its length
-        current_bone.head = [0, 0, 0]
-        length = list(bones.values())[i+1][0][1]
-        current_bone.tail = [0, 0, length]
-
-        # rotate bone
-        quat_armature_space = Quaternion(bone[1][1])
-        current_bone.transform(quat_armature_space.to_matrix())
-        
-        # set position
-        current_bone.translate(Vector(bone[1][0]))
-
-        # save bone, its tail position (next bone will be moved to it) and quaternion rotation
-        parent_bone = current_bone
-        parent_bone_tail = current_bone.tail
-        parent_bone_quat_armature_space = quat_armature_space
-        
-    # last bone in chain
-    elif i == (len(bones) - 1):
-        # create bone at armature origin and set its length
-        current_bone.head = [0, 0, 0]
-        current_bone.tail = [0, 0, 1]
-        
-        # rotate bone
-        current_bone_quat_parent_space = Quaternion(bone[1][1])
-        # like matrices, quaternions can be multiplied to accumulate rotational values
-        transform_quat = parent_bone_quat_armature_space @ current_bone_quat_parent_space
-        current_bone.transform(transform_quat.to_matrix())
-
-        # set position
-        current_bone.translate(Vector(parent_bone_tail))
-        
-        # connect
-        current_bone.parent = parent_bone
-        current_bone.use_connect = True
-        
-    else:
-        # create bone at armature origin and set its length
-        current_bone.head = [0, 0, 0]
-        length = list(bones.values())[i+1][0][1]
-        current_bone.tail = [0, 0, length]
-        
-        # rotate bone
-        current_bone_quat_parent_space = Quaternion(bone[1][1])
-        # like matrices, quaternions can be multiplied to accumulate rotational values
-        transform_quat = parent_bone_quat_armature_space @ current_bone_quat_parent_space
-        current_bone.transform(transform_quat.to_matrix())
-        
-        # set position
-        current_bone.translate(Vector(parent_bone_tail))
-        
-        # connect
-        current_bone.parent = parent_bone
-        current_bone.use_connect = True
-        
-        # save bone, its tail position (next bone will be moved to it) and quaternion rotation
-        parent_bone = current_bone
-        parent_bone_tail = current_bone.tail
-        parent_bone_quat_armature_space = transform_quat
-
-bpy.ops.object.editmode_toggle()
-'''
-
-
-
-
