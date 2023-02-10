@@ -25,6 +25,11 @@ class VertexDeclaration:
                 stride+=elesize
         self.stride = stride
 
+class SubMesh:
+    def __init__(self, start:int, count:int) -> None:
+        self.ibStart=start
+        self.ibCount=count
+        #self.mtl=None
 
 class Mesh:
     def __init__(self) -> None:
@@ -47,6 +52,7 @@ class Mesh:
         self.boneidx=[]
         self.boneweight=[]
         self.vertexDecl:VertexDeclaration=None
+        self.subMesh=[]
         
 
 
@@ -326,10 +332,16 @@ class LMFile(object):
         return meshinfo.strings[self.readU16()]
 
     def READ_SUBMESH(self,meshinfo:Mesh):        
+        '''
+        每个submesh块描述一个submesh，submesh对应lh中的相应的一个材质，本来只有ibstart和ibcount，
+        后来由于skin动画的限制，又把submesh拆分成了多个，称为drawcount
+        '''
         unk = self.readU16()
         ibStart = self.readU32()
         ibCnt = self.readU32()
         drawCnt = self.readU16()
+        submesh = SubMesh(ibStart,ibCnt)
+        meshinfo.subMesh.append(submesh)
         for i in range(drawCnt):
             ibstart = self.readU32()
             ibcnt = self.readU32()
@@ -339,8 +351,13 @@ class LMFile(object):
     def READ_UVSIZE(self, meshinfo:Mesh):
         pass
 
+    def export(self,file:str):
+        pass
+
 ##test
 if __name__ == "__main__":
+    # bb = [o for o in range(1,10) if o %2==0]
+    # pass
     ff = LMFile()
     #ff.parse('D:/work/layaimpexp/test/muzhalan.lm')
     ff.parse('D:/work/layaimpexp/test/tifa/Mesh/mesh_null_95.lm')

@@ -88,6 +88,10 @@ def nearby_signed_perm_matrix(rot):
 
     return m
 
+class ExportSetting:
+    def __init__(self) -> None:
+        self.onlySelected=True
+        self.useMeshVertexDecl=True
 
 class BlenderImporter(object):
     """doc"""
@@ -258,3 +262,12 @@ class BlenderImporter(object):
         lh = LHFile.LHFile()
         lh.parse(filename)
         """"""
+
+    def exportLH(self, setting:ExportSetting, filename:str,gatherfile=True):
+        if setting.onlySelected:
+            bpy.context.selected_objects
+        pass
+    def exportLM(self, vertexDecl:list[str],filename:str):
+        pass
+    def exportLMAT(self, filename:str):
+        pass
