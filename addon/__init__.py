@@ -79,7 +79,11 @@ class LayaExporter(bpy.types.Operator,ExportHelper):
                                         ('PROJMAT', "Matrix", "Exact projection matrix (from ripper log)"),
                                        ],
                                 )
-
+    use_selection: BoolProperty(
+        name='Selected Objects',
+        description='Export selected objects only',
+        default=False
+    )
 
     def invoke(self, context, event):
         wm = context.window_manager

@@ -351,6 +351,13 @@ class LMFile(object):
     def READ_UVSIZE(self, meshinfo:Mesh):
         pass
 
+    def READ_SKININFO(self,meshinfo:Mesh):
+        normCount = self.readU16()
+        skininfo = []
+        for i in range(normCount):
+            skininfo.append(self.readU32())
+        pass
+
     def export(self,file:str):
         pass
 
