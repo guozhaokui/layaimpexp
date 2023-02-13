@@ -127,6 +127,27 @@ class BlenderImporter(object):
         finally:
             bm.free()
 
+    def creatMesh(self,meshName:str,vb:list[tuple],ib:list[tuple],uv0:list[tuple]):
+        mesh = bpy.data.meshes.new(meshName)
+        #mesh.from_pydata([(-1,-1,0),(1,-1,0),(1,1,0),(-1,1,0)],[],[(0,1,2,3)])
+        # 参数是顶点，边，面。 面可以是3或者4个
+        mesh.from_pydata(vb, [], ib)
+        mesh.update()
+
+        # 要加uv需要bmesh
+        bm = bmesh.new()
+        try:
+            bm.from_mesh(mesh)
+            bm.verts.ensure_lookup_table()
+            if(len(uv0)>0):
+                self.createTextCoord(bm,0,uv0)
+            bm.to_mesh(mesh)
+        finally:
+            bm.free()
+
+        return mesh
+
+
     def createTextCoord(self,bm:bmesh,uvlayer:int,uvdata:list):
         uv_lay = bm.loops.layers.uv.new('uv_' + str(uvlayer))
         for face in bm.faces:
@@ -265,8 +286,16 @@ class BlenderImporter(object):
         for obj in lhsce.objects:            
             meshindex = obj.getMesh()
             skinrindex = obj.getArmature()
+            mesh=None
+            if meshindex>=0:
+                mehsfilter:LHFile.MeshFilter = obj.components[meshindex]
+                minfo = mehsfilter.sharedMesh
+                mesh = self.creatMesh(obj.name+'_mesh', minfo.vb, minfo.ib,minfo.uv0)
 
-            bobj = bpy.data.objects.new(obj.name, None)
+            if skinrindex>=0:
+                pass
+
+            bobj = bpy.data.objects.new(obj.name, mesh)
             vpos = obj.transform.localPosition
             bobj.location = Vector((vpos.x, vpos.y, vpos.z))
             bpy.context.collection.objects.link(bobj)            
