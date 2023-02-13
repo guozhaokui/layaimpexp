@@ -192,6 +192,39 @@ class BlenderImporter(object):
         # obj.rotation_quaternion = rot
         # obj.scale = scale
 
+    def createArmature(self,root:LHFile.Sprite3D):
+        if not root.isBone:
+            return
+        name = root.name
+        armature = bpy.data.armatures.new(name)
+        obj = bpy.data.objects.new(name, armature)
+        #obj.empty_display_size=1.0
+        context = bpy.context
+        scene = context.scene
+        scenename = scene.name
+        scene.collection.objects.link(obj)  #TODO 外面做
+        context.view_layer.objects.active = obj
+        # 转成edit模式
+        bpy.ops.object.editmode_toggle()
+        
+        def _createbone(sp:LHFile.Sprite3D):
+            if not sp.isBone:
+                #TODO 设置parentbone
+                return None
+            
+            bone = armature.edit_bones.new(sp.name)
+            sp.blender_bone=bone
+            for spc in sp.child:
+                cbone = _createbone(spc)
+                if cbone:
+                    cbone.parent = bone
+                    cbone.use_connect = True
+            return bone
+        for c in root.child:
+            _createbone(c)
+            pass
+
+
     def testAddBones():
         context = bpy.context
 
@@ -293,6 +326,8 @@ class BlenderImporter(object):
                 mesh = self.creatMesh(obj.name+'_mesh', minfo.vb, minfo.ib,minfo.uv0)
 
             if skinrindex>=0:
+                skin:LHFile.SkinnedMeshRenderer = obj.components[skinrindex]
+                self.createArmature(skin.rootBone)
                 pass
 
             bobj = bpy.data.objects.new(obj.name, mesh)

@@ -213,6 +213,7 @@ class Sprite3D:
         self.isBone=False
         #如果是骨骼的话 ，需要记录一个根，这样任意挂在该骨骼上的物体都容易找到parent
         self.boneRefArmature = None
+        self.blender_bone = None
 
     def getMesh(self):
         for index,c in enumerate(self.components):
