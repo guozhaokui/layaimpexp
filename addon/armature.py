@@ -62,6 +62,7 @@ mesh_object = bpy.data.objects.new('Mesh_Object', mesh)
 
 # For Vertex Weights, first we create a group for each bone
 for i in range(0, len(self.bones)):
+    # 创建vertex group 参数是名称
     mesh_object.vertex_groups.new("bone_%03d" % i)
 
 #Loop over all of the vertices
@@ -69,6 +70,8 @@ for vertex in self.verts:
     index = vertex['index']
     indices = vertex['indices']
     weights = vertex['weights']
+    # add函数，第一个是一个索引列表，表示对应的顶点索引，第二个是权重，第三个是 'ADD'|'SUBTRACT'|'REPLACE' 表示添加，删除，替换
+    # 替换一般是替换权重
     mesh_object.vertex_groups[indices[0]].add([index], 1.0, "REPLACE")
 
 bpy.ops.object.mode_set(mode='OBJECT')

@@ -260,7 +260,19 @@ class BlenderImporter(object):
 
     def importLH(self, filename):
         lh = LHFile.LHFile()
-        lh.parse(filename)
+        lhsce = lh.parse(filename)
+        # 创建普通对象
+        for obj in lhsce.objects:            
+            meshindex = obj.getMesh()
+            skinrindex = obj.getArmature()
+
+            bobj = bpy.data.objects.new(obj.name, None)
+            vpos = obj.transform.localPosition
+            bobj.location = Vector((vpos.x, vpos.y, vpos.z))
+            bpy.context.collection.objects.link(bobj)            
+            pass
+        # 创建armature
+
         """"""
 
     def exportLH(self, setting:ExportSetting, filename:str,gatherfile=True):

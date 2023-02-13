@@ -209,6 +209,30 @@ class Sprite3D:
         self.components:list[Component]=[]
         self.child:list[Sprite3D]=[]
         self.parent=None
+        self.parent_bone=None
+        self.isBone=False
+        #如果是骨骼的话 ，需要记录一个根，这样任意挂在该骨骼上的物体都容易找到parent
+        self.boneRefArmature = None
+
+    def getMesh(self):
+        for index,c in enumerate(self.components):
+            if isinstance(c,MeshFilter):
+                return index
+        return -1
+
+    def getArmature(self):
+        for index,c in enumerate(self.components):
+            if isinstance(c,SkinnedMeshRenderer):
+                return index
+        return -1
+
+class LHScene(Sprite3D):
+    def __init__(self):
+        super().__init__()
+        self.root=None
+        self.objects:list[Sprite3D]=[]
+        self.armatures=None
+        self.assets=None
 
 class RefObj:
     AllRefObj=[]
@@ -271,12 +295,43 @@ class LHFile:
         f = open(file,'r')
         data = f.read()
         fobj = json.loads(data)
-        ret:Sprite3D=None
+        root:Sprite3D=None
         if "_$ver" in fobj:
-            ret = self.parse3(fobj)
+            root = self.parse3(fobj)
         else:
-            ret = self.parse2(fobj)
+            root = self.parse2(fobj)
+
+        ret = LHScene()
+        ret.root=root
+        ret.armatures=self.gatherArmature(root,{})
+        ret.objects = self.gatherObjects(root,[])
+        ret.assets = assetsMgr
         return ret
+
+    def gatherObjects(self,root:Sprite3D,objects:list[Sprite3D]):
+        def _gatherObjects(obj:Sprite3D):
+            if not obj.isBone:
+                objects.append(obj)
+                for oc in obj.child:
+                    _gatherObjects(oc)
+        _gatherObjects(root)
+        return objects
+
+    def gatherArmature(self,root:Sprite3D,armatures):
+        def _gatherArmature(obj:Sprite3D):
+            for c in obj.components:
+                if isinstance(c,SkinnedMeshRenderer):
+                    rootsp:Sprite3D = c.rootBone
+                    armatures[rootsp._id] = rootsp
+                    for b in c._bones:
+                        b.isBone=True
+                        b.boneRefArmature=rootsp
+            for child in obj.child:
+                _gatherArmature(child)
+            pass
+        _gatherArmature(root)
+        return armatures
+
 
     def parse3(self,obj, curobj=None):
         ret = self._parse3(obj,curobj)
