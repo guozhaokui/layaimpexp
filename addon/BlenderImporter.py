@@ -206,23 +206,64 @@ class BlenderImporter(object):
         context.view_layer.objects.active = obj
         # 转成edit模式
         bpy.ops.object.editmode_toggle()
+
+        #用来计算armature空间的quat
+        quat_armature_space = Quaternion((1,0,0,0))
+        pos_armature_space = Vector((0,0,0))      #父骨骼的head的位置
         
-        def _createbone(sp:LHFile.Sprite3D):
+        def _createbone(sp:LHFile.Sprite3D, parent_head, parent_quat):
             if not sp.isBone:
                 #TODO 设置parentbone
                 return None
             
             bone = armature.edit_bones.new(sp.name)
+            bone.head = [0,0,0]
             sp.blender_bone=bone
+            childnum = len(sp.child)
+
+            if childnum>1:
+                #多个子，则认为tail是固定长度，固定朝向
+                bone.tail = [0,0,0.1]
+            elif childnum==1:
+                bonelen = sp.child[0].transform.localPosition.length()
+                bone.tail = [0,0,bonelen]
+                bone.use_connect = True
+            else:
+                return bone
+
+            quat = sp.transform.localRotation
+            # 父骨骼空间的旋转
+            current_bone_quat_parent_space = Quaternion((quat.w,quat.x,quat.y,quat.z))
+            transform_quat = parent_quat @ current_bone_quat_parent_space
+            parent_quat = transform_quat
+
+            #上面设置tail了，现在可以变换以便计算世界空间的tail
+            # 先本地位置偏移
+            localpos = sp.transform.localPosition
+            vpos = Vector((localpos.x, localpos.y, localpos.z))
+            bone.translate(vpos)
+            # 本地偏移以后旋转一下，得到新的本地偏移？
+            bone.transform(transform_quat.to_matrix())
+            # 相对parent的原点偏移一下
+            bone.translate(Vector(parent_head))
+            parent_head = bone.head
+
             for spc in sp.child:
-                cbone = _createbone(spc)
+                cbone = _createbone(spc,parent_head,parent_quat)
                 if cbone:
                     cbone.parent = bone
-                    cbone.use_connect = True
+
+            # 设置朝向
+            # 设置到正确位置
             return bone
-        for c in root.child:
-            _createbone(c)
-            pass
+
+        _createbone(root,pos_armature_space,quat_armature_space)
+        # for c in root.child:
+        #     _createbone(c)
+        #     pass
+
+        #退出编辑模式
+        bpy.ops.object.editmode_toggle()
 
 
     def testAddBones():

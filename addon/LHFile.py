@@ -16,6 +16,8 @@ class Vector3:
         self.z=z
     def copy(self,b):
         self.set(b.x,b.y,b.z)
+    def length(self):
+        return (self.x**2+self.y**2+self.z**2)**0.5
 
 
 class Quaternion:
@@ -43,7 +45,7 @@ class Bounds:
 class Transform:
     def __init__(self):
         self._localPosition=Vector3()
-        self._localScale=Vector3()
+        self._localScale=Vector3(1.0,1.0,1.0)
         self._localRotation=Quaternion()
 
     @property
