@@ -197,6 +197,8 @@ class BlenderImporter(object):
             return
         name = root.name
         armature = bpy.data.armatures.new(name)
+        armature.show_names=True
+        armature.display_type = "STICK"        
         obj = bpy.data.objects.new(name, armature)
         #obj.empty_display_size=1.0
         context = bpy.context
@@ -227,7 +229,7 @@ class BlenderImporter(object):
             elif childnum==1:
                 bonelen = sp.child[0].transform.localPosition.length()
                 #bone.tail = [0,0,bonelen]
-                bone.tail = [0,0,0.1]
+                bone.tail = [0,0,bonelen]
                 #bone.use_connect = True
             else:
                 return bone
@@ -372,12 +374,17 @@ class BlenderImporter(object):
                 minfo = mehsfilter.sharedMesh
                 mesh = self.creatMesh(obj.name+'_mesh', minfo.vb, minfo.ib,minfo.uv0)
 
+            bobj = bpy.data.objects.new(obj.name, mesh)
+
             if skinrindex>=0:
                 skin:LHFile.SkinnedMeshRenderer = obj.components[skinrindex]
                 self.createArmature(skin.rootBone)
-                pass
+                for b in skin._bones:
+                    # 创建vertex group 参数是名称
+                    bobj.vertex_groups.new(name='bone_%s'%b.name)
 
-            bobj = bpy.data.objects.new(obj.name, mesh)
+                    pass
+
             vpos = obj.transform.localPosition
             bobj.location = Vector((vpos.x, vpos.y, vpos.z))
             bpy.context.collection.objects.link(bobj)            
