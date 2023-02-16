@@ -226,16 +226,13 @@ class BlenderImporter(object):
                 bone.tail = [0,0,0.1]
             elif childnum==1:
                 bonelen = sp.child[0].transform.localPosition.length()
-                bone.tail = [0,0,bonelen]
-                bone.use_connect = True
+                #bone.tail = [0,0,bonelen]
+                bone.tail = [0,0,0.1]
+                #bone.use_connect = True
             else:
                 return bone
 
             quat = sp.transform.localRotation
-            # 父骨骼空间的旋转
-            current_bone_quat_parent_space = Quaternion((quat.w,quat.x,quat.y,quat.z))
-            transform_quat = parent_quat @ current_bone_quat_parent_space
-            parent_quat = transform_quat
 
             #上面设置tail了，现在可以变换以便计算世界空间的tail
             # 先本地位置偏移
@@ -243,14 +240,23 @@ class BlenderImporter(object):
             vpos = Vector((localpos.x, localpos.y, localpos.z))
             bone.translate(vpos)
             # 本地偏移以后旋转一下，得到新的本地偏移？
-            bone.transform(transform_quat.to_matrix())
+            bone.transform(parent_quat.to_matrix())
             # 相对parent的原点偏移一下
             bone.translate(Vector(parent_head))
             parent_head = bone.head
 
+            # 父骨骼空间的旋转
+            current_bone_quat_parent_space = Quaternion((quat.w,quat.x,quat.y,quat.z))
+            transform_quat = parent_quat @ current_bone_quat_parent_space
+            parent_quat = transform_quat
+
             for spc in sp.child:
                 cbone = _createbone(spc,parent_head,parent_quat)
                 if cbone:
+                    if childnum==1:
+                        # 子的head连接到bone的tail
+                        #cbone.use_connect=True
+                        pass
                     cbone.parent = bone
 
             # 设置朝向
