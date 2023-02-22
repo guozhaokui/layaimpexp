@@ -1,4 +1,5 @@
 
+from numpy import number
 import bpy, bmesh
 from mathutils import Vector, Quaternion, Matrix
 from bpy.props import *
@@ -101,7 +102,7 @@ class BlenderImporter(object):
         meshinfo = lm.parse(filename)
 
         meshName = os.path.basename(filename)
-        mesh = bpy.data.meshes.new(meshName)
+        mesh = self.creatMesh(meshName,meshinfo)
         obj  = bpy.data.objects.new(meshName, mesh)
 
         if hasattr(bpy.context.scene, "cursor_location"):
@@ -111,10 +112,19 @@ class BlenderImporter(object):
             obj.location = bpy.context.scene.cursor.location
             bpy.context.collection.objects.link(obj)
 
+    def creatMesh(self,meshName:str, meshinfo:LMFile.Mesh):
+        mesh = bpy.data.meshes.new(meshName)
         #mesh.from_pydata([(-1,-1,0),(1,-1,0),(1,1,0),(-1,1,0)],[],[(0,1,2,3)])
         # 参数是顶点，边，面。 面可以是3或者4个
         mesh.from_pydata(meshinfo.vb, [], meshinfo.ib)
         mesh.update()
+
+        # test
+        #self.assignNormals(mesh,[[0,0,0] for i in meshinfo.vb])    
+        #
+        if len(meshinfo.normal)==len(meshinfo.vb):
+            self.assignNormals(mesh,meshinfo.normal)    
+
 
         # 要加uv需要bmesh
         bm = bmesh.new()
@@ -123,24 +133,6 @@ class BlenderImporter(object):
             bm.verts.ensure_lookup_table()
             if(len(meshinfo.uv0)>0):
                 self.createTextCoord(bm,0,meshinfo.uv0)
-            bm.to_mesh(mesh)
-        finally:
-            bm.free()
-
-    def creatMesh(self,meshName:str,vb:list[tuple],ib:list[tuple],uv0:list[tuple]):
-        mesh = bpy.data.meshes.new(meshName)
-        #mesh.from_pydata([(-1,-1,0),(1,-1,0),(1,1,0),(-1,1,0)],[],[(0,1,2,3)])
-        # 参数是顶点，边，面。 面可以是3或者4个
-        mesh.from_pydata(vb, [], ib)
-        mesh.update()
-
-        # 要加uv需要bmesh
-        bm = bmesh.new()
-        try:
-            bm.from_mesh(mesh)
-            bm.verts.ensure_lookup_table()
-            if(len(uv0)>0):
-                self.createTextCoord(bm,0,uv0)
             bm.to_mesh(mesh)
         finally:
             bm.free()
@@ -159,6 +151,11 @@ class BlenderImporter(object):
                 #不知道为什么要反转，否则效果不对
                 uv.y=1-datauv[1]
 
+    def assignNormals(self,mesh, normals:list[number]):
+        mesh.use_auto_smooth = True #必须要设置这个
+        # normals的个数必须与顶点数相同
+        mesh.normals_split_custom_set_from_vertices(normals)
+        pass
 
     def addMtl(matName:str):
         #new创建的自带一个 Principled BSDF 节点，所以下面选择就行了
@@ -372,7 +369,7 @@ class BlenderImporter(object):
             if meshindex>=0:
                 mehsfilter:LHFile.MeshFilter = obj.components[meshindex]
                 minfo = mehsfilter.sharedMesh
-                mesh = self.creatMesh(obj.name+'_mesh', minfo.vb, minfo.ib,minfo.uv0)
+                mesh = self.creatMesh(obj.name+'_mesh', minfo)
 
             bobj = bpy.data.objects.new(obj.name, mesh)
 
@@ -395,7 +392,11 @@ class BlenderImporter(object):
 
     def exportLH(self, setting:ExportSetting, filename:str,gatherfile=True):
         if setting.onlySelected:
-            bpy.context.selected_objects
+            mesh_obj = bpy.context.selected_objects[0]
+            mesh = mesh_obj.data
+            for l in mesh.loops:
+                pass
+
         pass
     def exportLM(self, vertexDecl:list[str],filename:str):
         pass

@@ -97,6 +97,7 @@ class LayaExporter(bpy.types.Operator,ExportHelper):
         imp = BlenderImporter.BlenderImporter()
         ext:str = os.path.splitext(self.filepath)[-1]
         if(ext.lower()=='.lh'):
+            imp.exportLH(BlenderImporter.ExportSetting(),self.filepath)
             pass
         elif(ext.lower()=='.lm'):
             pass

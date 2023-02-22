@@ -293,16 +293,51 @@ class LMFile(object):
                     self.seek(vbstart)
                     vb = self.__lmfile.read(vertSize)
                     hasuv = 'UV' in meshinfo.vertexDecl.vertele
-                    uvoff=0
-                    if hasuv:
-                        uvoff = meshinfo.vertexDecl.vertele['UV'][0]
+                    uvoff=0 if not hasuv else  meshinfo.vertexDecl.vertele['UV'][0]
+
+                    hasnormal = 'NORMAL' in meshinfo.vertexDecl.vertele
+                    normaloff= 0 if not hasnormal else meshinfo.vertexDecl.vertele['NORMAL'][0]
+
+                    hascolor= 'COLOR' in meshinfo.vertexDecl.vertele
+                    coloroff=0 if not hascolor else meshinfo.vertexDecl.vertele['COLOR'][0]
+
+                    hastangent='TANGENT' in meshinfo.vertexDecl.vertele
+                    tangentoff=0 if not hastangent else meshinfo.vertexDecl.vertele['TANGENT'][0]
+
+                    hasweight='BLENDWEIGHT' in meshinfo.vertexDecl.vertele
+                    weightoff = 0 if not hasweight else meshinfo.vertexDecl.vertele['BLENDWEIGHT'][0]
+
+                    hasbboneidx = 'BLENDINDICES' in meshinfo.vertexDecl.vertele
+                    boneidxoff = 0 if not hasbboneidx else meshinfo.vertexDecl.vertele['BLENDINDICES'][0]
+                    
                     for v in range(vertexCnt):
-                        vert = struct.unpack_from("fff", vb, v*stride)
+                        start = v*stride
+                        vert = struct.unpack_from("fff", vb, start)
                         meshinfo.vb.append(vert)
 
                         if(hasuv):
-                            uv = struct.unpack_from('ff',vb,v*stride+uvoff)
+                            uv = struct.unpack_from('ff',vb,start+uvoff)
                             meshinfo.uv0.append(uv)
+
+                        if(hasnormal):
+                            norm = struct.unpack_from('fff',vb, start+normaloff)
+                            norm1 = (-norm[0],-norm[1],-norm[2])
+                            meshinfo.normal.append(norm1)
+                        
+                        if(hascolor):
+                            color = struct.unpack_from('ffff', vb, start+coloroff)
+                            meshinfo.color.append(color)
+
+                        if(hastangent):
+                            tangent = struct.unpack_from('ffff',vb, start+tangentoff)
+                            meshinfo.tangent.append(tangent)
+                        if(hasweight):
+                            weight = struct.unpack_from('ffff', vb, start+weightoff)
+                            meshinfo.boneweight.append(weight)
+                        if(hasbboneidx):
+                            idx = struct.unpack_from('BBBB',vb,start+boneidxoff)
+                            meshinfo.boneidx.append(idx)
+                        
                     #假设读完了
                     self.seek(vbstart+vertSize)
                     pass
