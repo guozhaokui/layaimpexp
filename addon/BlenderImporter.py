@@ -89,6 +89,12 @@ def nearby_signed_perm_matrix(rot):
 
     return m
 
+def isImageLoaded(img):
+    if (0==img.size[0]) and (img.size[1]==0):
+        return False
+    return True
+
+
 class ExportSetting:
     def __init__(self) -> None:
         self.onlySelected=True
@@ -117,14 +123,11 @@ class BlenderImporter(object):
         #mesh.from_pydata([(-1,-1,0),(1,-1,0),(1,1,0),(-1,1,0)],[],[(0,1,2,3)])
         # 参数是顶点，边，面。 面可以是3或者4个
         mesh.from_pydata(meshinfo.vb, [], meshinfo.ib)
-        mesh.update()
 
-        # test
-        #self.assignNormals(mesh,[[0,0,0] for i in meshinfo.vb])    
-        #
         if len(meshinfo.normal)==len(meshinfo.vb):
             self.assignNormals(mesh,meshinfo.normal)    
 
+        mesh.update()
 
         # 要加uv需要bmesh
         bm = bmesh.new()
@@ -153,6 +156,8 @@ class BlenderImporter(object):
 
     def assignNormals(self,mesh, normals:list[number]):
         mesh.use_auto_smooth = True #必须要设置这个
+        #mesh.show_normal_vertex = True
+        #mesh.show_normal_loop = True
         # normals的个数必须与顶点数相同
         mesh.normals_split_custom_set_from_vertices(normals)
         pass
@@ -357,10 +362,58 @@ class BlenderImporter(object):
 
         bpy.ops.object.editmode_toggle()
 
+    def createMaterial(self,name:str, diffTex):
+        mtl = bpy.data.materials.new(name)
+        mtl.use_nodes = True
+        bsdf = mtl.node_tree.nodes["Principled BSDF"] 
+        # 创建一个贴图节点
+        texImage = mtl.node_tree.nodes.new('ShaderNodeTexImage')
+        texImage.image = diffTex
+        texImage.location.x=100
+        texImage.location.y=100
+        # 连接到Base Color口上
+        mtl.node_tree.links.new(bsdf.inputs['Base Color'], texImage.outputs['Color'])
+        return mtl
+
+    def _createImg(self, fullpath:str):
+        loadedImgs=[]
+        failedImgs=[]
+        img = None
+        try:
+            img = bpy.data.images.load(fullpath)
+            if isImageLoaded(img):
+                loadedImgs.append(fullpath)
+            else:
+                failedImgs.append(fullpath)
+                bpy.data.images.remove(img)
+                img = None
+        except Exception as e:
+            img = None
+        return img
 
     def importLH(self, filename):
         lh = LHFile.LHFile()
         lhsce = lh.parse(filename)
+
+        assets:LHFile.Assets = lhsce.assets
+        # 处理材质
+        # 加载所有的贴图
+        for k,v in assets.imgs.items():
+            img = self._createImg(k)
+            if img:
+                v.blenderobj = img
+        # 创建材质
+        i=0
+        for k,v in assets.mtls.items():
+            name = 'mtl_%d'%i
+            i=i+1
+            mtl = self.createMaterial(name,v.diffuseTexture.blenderobj)
+            if mtl:
+                v.blenderobj=mtl
+            pass
+
+        # 给对象设置材质
+
         # 创建普通对象
         for obj in lhsce.objects:            
             meshindex = obj.getMesh()
@@ -384,8 +437,12 @@ class BlenderImporter(object):
 
             vpos = obj.transform.localPosition
             bobj.location = Vector((vpos.x, vpos.y, vpos.z))
+            # 添加到场景中
             bpy.context.collection.objects.link(bobj)            
-            pass
+
+            #添加材质
+            
+        pass
         # 创建armature
 
         """"""

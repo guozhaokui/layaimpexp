@@ -321,8 +321,7 @@ class LMFile(object):
 
                         if(hasnormal):
                             norm = struct.unpack_from('fff',vb, start+normaloff)
-                            norm1 = (-norm[0],-norm[1],-norm[2])
-                            meshinfo.normal.append(norm1)
+                            meshinfo.normal.append(norm)
                         
                         if(hascolor):
                             color = struct.unpack_from('ffff', vb, start+coloroff)
@@ -347,11 +346,12 @@ class LMFile(object):
             if(shortIB):
                 for f in range(int(ibCnt/3)):
                     face = struct.unpack_from('HHH',ib,f*3*2)
-                    meshinfo.ib.append(face)
+                    meshinfo.ib.append((face[0],face[2],face[1]))   # 这个顺序效果好一些，具体不明
             else:
                 for f in range(int(ibCnt/3)):
                     face = struct.unpack_from('III',ib,f*3*4)
-                    meshinfo.ib.append(face)
+                    meshinfo.ib.append((face[0],face[2],face[1]))   # 这个顺序效果好一些，具体不明
+                    #meshinfo.ib.append(face)
             
             self.seek(ibstart+iblen)
 

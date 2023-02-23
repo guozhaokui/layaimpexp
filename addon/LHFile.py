@@ -104,6 +104,7 @@ class Texture:
     def __init__(self):
         self.linear=False
         self.image=''
+        self.blenderobj=None
         pass
 
 class Material:
@@ -117,6 +118,7 @@ class Material:
         self.metallicTexture=(None,'r') #贴图，通道. type()==tuple
         self.smoothValue=0
         self.smoothTexture=None
+        self.blenderobj=None
 
     @property
     def src(self):
@@ -142,8 +144,7 @@ class Material:
         pass
 
     def parse02(self,obj,url:str):
-        props = obj['props']
-        type = props['type']
+        self.parse03(obj,url)
         pass
     def parse03(self,obj,url:str):
         props = obj['props']
@@ -157,15 +158,35 @@ class Material:
                 if 'path' in t:
                     path = t['path']
                     absfile = os.path.normpath(os.path.join(mtlpath,path))
-                texture = Texture()
+                texture = assetsMgr.getAsset(absfile)
                 #texture.linear=t['constructParams'][5]
-                texture.image=absfile
                 if name=='u_MergeTexture':
                     self.diffuseTexture = texture
                 if name=='u_MergeTexture1':
                     self.metallicTexture=(texture,'a')
                     self.smoothTexture =(texture,'r')
                     pass
+            pass
+        elif type =='Laya.BlinnPhongMaterial':
+            if 'enableVertexColor' in props:
+                pass
+            for t in textures:
+                name=t['name']
+                absfile= None
+                if 'path' in t:
+                    path = t['path']
+                    absfile = os.path.normpath(os.path.join(mtlpath,path))
+                texture = assetsMgr.getAsset(absfile)
+                #texture.linear=t['constructParams'][5]
+                if name=='albedoTexture':
+                    self.diffuseTexture = texture
+            for v in props['vectors']:
+                name = v['name']
+                if name=='specularColor':
+                    pass
+                elif name=='albedoColor':
+                    pass
+                pass
             pass
         else:
             pass
@@ -182,9 +203,8 @@ class Material:
                 if 'path' in t:
                     path = t['path']
                     absfile = os.path.normpath(os.path.join(mtlpath,path))
-                texture = Texture()
+                texture = assetsMgr.getAsset(absfile)
                 #texture.linear=t['constructParams'][5]
-                texture.image=absfile
                 if name=='u_AlbedoTexture':
                     self.diffuseTexture = texture
                 if name=='u_NormalTexture':
@@ -236,6 +256,8 @@ class LHScene(Sprite3D):
         self.objects:list[Sprite3D]=[]
         self.armatures=None
         self.assets=None
+        # 材质数组，用来分给submesh
+        self.mtls = []
 
 class RefObj:
     AllRefObj=[]
@@ -270,12 +292,15 @@ class Assets:
             meshinfo = mesh.parse(url)
             self.meshes[url]=meshinfo
             return meshinfo
-        elif ext=='.png':
-            self.imgs[url]=url
-            return url
-        elif ext=='.jpg':
-            self.imgs[url]=url
-            return url
+        elif ext=='.png' or ext=='.jpg':
+            if url in self.imgs:
+                return self.imgs[url]
+            texture = Texture()
+            texture.image=url
+            self.imgs[url]=texture
+            return texture
+        else:
+            pass
         
 
 assetsMgr = Assets()
@@ -409,6 +434,10 @@ class LHFile:
                             print('error')
                         else:
                             cc = asset
+                        
+                        if isinstance(asset, Material):
+                            #添加到材质列表中
+                            pass
                         #cc.src=abssrc
 
                         pass
@@ -525,6 +554,7 @@ class LHFile:
                         if 'path' in m:
                             absfile = os.path.normpath(os.path.join(self.lhpath,m['path']))
                             mtlobj = assetsMgr.getAsset(absfile)
+                            # TODO 添加到材质列表
                             if meshRender:
                                 meshRender.materials.append(mtlobj)
 
