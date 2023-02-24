@@ -362,17 +362,19 @@ class BlenderImporter(object):
 
         bpy.ops.object.editmode_toggle()
 
-    def createMaterial(self,name:str, diffTex):
+    def createMaterial(self,name:str, mtlinfo:LHFile.Material):
         mtl = bpy.data.materials.new(name)
         mtl.use_nodes = True
         bsdf = mtl.node_tree.nodes["Principled BSDF"] 
-        # 创建一个贴图节点
-        texImage = mtl.node_tree.nodes.new('ShaderNodeTexImage')
-        texImage.image = diffTex
-        texImage.location.x=100
-        texImage.location.y=100
-        # 连接到Base Color口上
-        mtl.node_tree.links.new(bsdf.inputs['Base Color'], texImage.outputs['Color'])
+
+        if(mtlinfo.diffuseTexture and mtlinfo.diffuseTexture.blenderobj):
+            # 创建一个贴图节点
+            texImage = mtl.node_tree.nodes.new('ShaderNodeTexImage')
+            texImage.image = mtlinfo.diffuseTexture.blenderobj
+            texImage.location.x=100
+            texImage.location.y=100
+            # 连接到Base Color口上
+            mtl.node_tree.links.new(bsdf.inputs['Base Color'], texImage.outputs['Color'])
         return mtl
 
     def _createImg(self, fullpath:str):
@@ -407,7 +409,7 @@ class BlenderImporter(object):
         for k,v in assets.mtls.items():
             name = 'mtl_%d'%i
             i=i+1
-            mtl = self.createMaterial(name,v.diffuseTexture.blenderobj)
+            mtl = self.createMaterial(name,v)
             if mtl:
                 v.blenderobj=mtl
             pass
@@ -441,7 +443,11 @@ class BlenderImporter(object):
             bpy.context.collection.objects.link(bobj)            
 
             #添加材质
-            
+            if mesh and len(obj.mtls)>0:
+                #TODO 选择材质
+
+                for mtl in obj.mtls:
+                    bobj.data.materials.append(mtl.blenderobj)
         pass
         # 创建armature
 

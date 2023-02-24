@@ -236,6 +236,8 @@ class Sprite3D:
         #如果是骨骼的话 ，需要记录一个根，这样任意挂在该骨骼上的物体都容易找到parent
         self.boneRefArmature = None
         self.blender_bone = None
+        # 材质数组，用来分给submesh
+        self.mtls = []
 
     def getMesh(self):
         for index,c in enumerate(self.components):
@@ -256,8 +258,6 @@ class LHScene(Sprite3D):
         self.objects:list[Sprite3D]=[]
         self.armatures=None
         self.assets=None
-        # 材质数组，用来分给submesh
-        self.mtls = []
 
 class RefObj:
     AllRefObj=[]
@@ -437,6 +437,7 @@ class LHFile:
                         
                         if isinstance(asset, Material):
                             #添加到材质列表中
+                            cc.mtls.append(asset)
                             pass
                         #cc.src=abssrc
 
@@ -554,9 +555,9 @@ class LHFile:
                         if 'path' in m:
                             absfile = os.path.normpath(os.path.join(self.lhpath,m['path']))
                             mtlobj = assetsMgr.getAsset(absfile)
-                            # TODO 添加到材质列表
-                            if meshRender:
-                                meshRender.materials.append(mtlobj)
+                            #if meshRender:
+                            #    meshRender.materials.append(mtlobj)
+                            cc.mtls.append(mtlobj)
 
                 elif p == 'rootBone':
                     skinnrender:SkinnedMeshRenderer = meshRender

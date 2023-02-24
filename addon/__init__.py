@@ -31,6 +31,8 @@ from bpy.types import (
 
 class LayaImporter(bpy.types.Operator,ImportHelper):
     """导入laya资源"""
+    axis_forward='Z'
+    axis_up='Y'
     bl_idname = "import_laya.mesh"        # Unique identifier for buttons and menu items to reference.
     bl_label = "加载"         # Display name in the interface.      选择文件的确定按钮
     bl_options = {'REGISTER', 'UNDO'}  # Enable undo for the operator.
