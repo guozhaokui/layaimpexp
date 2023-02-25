@@ -4,6 +4,7 @@ import os
 
 import LMFile
 from LMFile import Mesh
+from Loader import load,LoadType,normalize_path
 
 class Vector3:
     def __init__(self,x=0,y=0,z=0):
@@ -130,8 +131,9 @@ class Material:
         self.parseMtl(url)
 
     def parseMtl(self,url:str):
-        f = open(url,'r')
-        data = f.read()
+        # f = open(url,'r')
+        # data = f.read()
+        data = load(url,LoadType.TEXT)
         fobj = json.loads(data)
         if "version" in fobj:
             ver = fobj['version']
@@ -157,7 +159,7 @@ class Material:
                 absfile= None
                 if 'path' in t:
                     path = t['path']
-                    absfile = os.path.normpath(os.path.join(mtlpath,path))
+                    absfile = normalize_path(os.path.join(mtlpath,path))
                 texture = assetsMgr.getAsset(absfile)
                 #texture.linear=t['constructParams'][5]
                 if name=='u_MergeTexture':
@@ -175,7 +177,7 @@ class Material:
                 absfile= None
                 if 'path' in t:
                     path = t['path']
-                    absfile = os.path.normpath(os.path.join(mtlpath,path))
+                    absfile = normalize_path(os.path.join(mtlpath,path))
                 texture = assetsMgr.getAsset(absfile)
                 #texture.linear=t['constructParams'][5]
                 if name=='albedoTexture':
@@ -202,7 +204,7 @@ class Material:
                 absfile= None
                 if 'path' in t:
                     path = t['path']
-                    absfile = os.path.normpath(os.path.join(mtlpath,path))
+                    absfile = normalize_path(os.path.join(mtlpath,path))
                 texture = assetsMgr.getAsset(absfile)
                 #texture.linear=t['constructParams'][5]
                 if name=='u_AlbedoTexture':
@@ -274,7 +276,7 @@ class Assets:
         self.meshes={}
 
     def getAsset(self,url:str):
-        url = os.path.normpath(url)
+        url = normalize_path(url)
         ext:str = (os.path.splitext(url)[-1]).lower()
         if ext=='.lh':
             pass
@@ -320,8 +322,7 @@ class LHFile:
     def parse(self,file:str):
         self.lhfile=file
         self.lhpath = os.path.dirname(file)
-        f = open(file,'r')
-        data = f.read()
+        data = load(file,LoadType.TEXT)
         fobj = json.loads(data)
         root:Sprite3D=None
         if "_$ver" in fobj:
@@ -428,7 +429,7 @@ class LHFile:
                         pass
                     elif i=='_$uuid':
                         src = obj[i]
-                        abssrc = os.path.normpath(os.path.join(self.lhpath,src))
+                        abssrc = normalize_path(os.path.join(self.lhpath,src))
                         asset = assetsMgr.getAsset(abssrc)
                         if not isinstance(asset,typecls):
                             print('error')
@@ -547,13 +548,13 @@ class LHFile:
                     trans.localScale=scale
                 elif p == 'meshPath':
                     if meshfilter:
-                        absfile = os.path.normpath(os.path.join(self.lhpath,props[p]))
+                        absfile = normalize_path(os.path.join(self.lhpath,props[p]))
                         meshfilter.sharedMesh = assetsMgr.getAsset(absfile)
                 elif p == 'materials':
                     mtls = props[p]
                     for m in mtls:
                         if 'path' in m:
-                            absfile = os.path.normpath(os.path.join(self.lhpath,m['path']))
+                            absfile = normalize_path(os.path.join(self.lhpath,m['path']))
                             mtlobj = assetsMgr.getAsset(absfile)
                             #if meshRender:
                             #    meshRender.materials.append(mtlobj)

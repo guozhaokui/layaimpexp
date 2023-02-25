@@ -3,6 +3,7 @@ from numpy import number
 import bpy, bmesh
 from mathutils import Vector, Quaternion, Matrix
 from bpy.props import *
+from bpy_extras.image_utils import load_image
 import os
 import LMFile
 import LHFile
@@ -382,7 +383,10 @@ class BlenderImporter(object):
         failedImgs=[]
         img = None
         try:
-            img = bpy.data.images.load(fullpath)
+            if fullpath.startswith('http'):
+                img = load_image(fullpath, bpy.context)
+            else: 
+                img = bpy.data.images.load(fullpath)
             if isImageLoaded(img):
                 loadedImgs.append(fullpath)
             else:

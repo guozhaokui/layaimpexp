@@ -1,6 +1,8 @@
+from fileinput import filename
 import os
 import struct
 import Float16
+from Loader import load,LoadType
 
 class ChunkInfo:
     def __init__(self,off=0,size=0) -> None:
@@ -135,7 +137,7 @@ class LMFile(object):
 
 
     def parse(self, fileName:str)->Mesh:
-        self.__lmfile = open(fileName,"rb")
+        self.__lmfile = load(fileName,LoadType.IO)#  open(fileName,"rb")
         self.__lmfile.seek(0, os.SEEK_END)
         self.__fileSize = self.__lmfile.tell()
         self.__lmfile.seek(0, os.SEEK_SET)

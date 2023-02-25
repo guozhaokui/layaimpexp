@@ -7,6 +7,7 @@ bl_info = {
     "category": "Import-Export",
 }
 
+from email.policy import default
 import bpy
 import os
 import sys
@@ -39,6 +40,9 @@ class LayaImporter(bpy.types.Operator,ImportHelper):
     total: IntProperty(name="Steps", default=2, min=1, max=100)
     files       : CollectionProperty(name="File Path", type=bpy.types.OperatorFileListElement,)
     directory   : StringProperty(maxlen=1024, subtype='DIR_PATH', options={'HIDDEN', 'SKIP_SAVE'},)
+    url   : StringProperty(maxlen=1024, 
+        #default='https://oss.layabox1-beijing.layabox.com/upload/svn/resource/character/ohayoo_avatar/model/Role_taikong_01_head.lh'
+        )
     projTab     : EnumProperty(name="Geometry parameters",
                                  default = 'MANUAL',
                                  description="Reverse projection parameters",
@@ -58,11 +62,12 @@ class LayaImporter(bpy.types.Operator,ImportHelper):
                  for name in self.files]
 
         imp = BlenderImporter.BlenderImporter()
-        ext:str = os.path.splitext(self.filepath)[-1]
+        url = self.url or self.filepath
+        ext:str = os.path.splitext(url)[-1]
         if(ext.lower()=='.lh'):
-            imp.importLH(self.filepath)
+            imp.importLH(url)
         elif(ext.lower()=='.lm'):
-            imp.importLm(self.filepath)
+            imp.importLm(url)
         return {'FINISHED'}            # Lets Blender know the operator finished successfully.
 
 
