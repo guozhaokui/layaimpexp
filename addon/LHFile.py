@@ -20,6 +20,23 @@ class Vector3:
     def length(self):
         return (self.x**2+self.y**2+self.z**2)**0.5
 
+class Vector4:
+    def __init__(self,x=0,y=0,z=0,w=0):
+        self.x=x
+        self.y=y
+        self.z=z
+        self.w=w
+
+    def set(self,x,y,z,w):
+        self.x=x
+        self.y=y
+        self.z=z
+        self.w=w
+
+    def copy(self,b):
+        self.set(b.x,b.y,b.z,b.w)
+    def length(self):
+        return (self.x**2+self.y**2+self.z**2, self.w**2)**0.5
 
 class Quaternion:
     def __init__(self,x=0,y=0,z=0,w=1):
@@ -396,6 +413,7 @@ class LHFile:
         if '_$type' not in obj and not curobj:
             return None
         cc:Sprite3D=curobj
+        typecls=None
         if not cc:
             _type = obj['_$type']
             allcls = globals()
@@ -431,7 +449,7 @@ class LHFile:
                         src = obj[i]
                         abssrc = normalize_path(os.path.join(self.lhpath,src))
                         asset = assetsMgr.getAsset(abssrc)
-                        if not isinstance(asset,typecls):
+                        if typecls and not isinstance(asset,typecls):
                             print('error')
                         else:
                             cc = asset

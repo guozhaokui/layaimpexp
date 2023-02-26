@@ -42,6 +42,7 @@ class LayaImporter(bpy.types.Operator,ImportHelper):
     directory   : StringProperty(maxlen=1024, subtype='DIR_PATH', options={'HIDDEN', 'SKIP_SAVE'},)
     url   : StringProperty(maxlen=1024, 
         #default='https://oss.layabox1-beijing.layabox.com/upload/svn/resource/character/ohayoo_avatar/model/Role_taikong_01_head.lh'
+        #default='https://develop-layaverse-1.layaverse.com/upload/svn/resource/65avatar/2/ske/female.lh'
         )
     projTab     : EnumProperty(name="Geometry parameters",
                                  default = 'MANUAL',
