@@ -7,6 +7,7 @@ from bpy_extras.image_utils import load_image
 import os
 import LMFile
 import LHFile
+from Loader import load,LoadType,normalize_path
 
 class VNode:
     # Types
@@ -384,7 +385,16 @@ class BlenderImporter(object):
         img = None
         try:
             if fullpath.startswith('http'):
-                img = load_image(fullpath, bpy.context)
+                #img = load_image(fullpath, bpy.context)
+                imgdata = load(fullpath,LoadType.BIN)
+                filename = os.path.basename(fullpath)
+                filepath = os.path.join(bpy.app.tempdir, filename)
+                with open(filepath, "wb") as f:
+                    f.write(imgdata)                
+                img = bpy.data.images.load(filepath)                    
+                img.name = "MyImage"
+                #img.filepath = "//"+filename
+                #os.remove(filepath)  删除后面isImageLoaded会报错
             else: 
                 img = bpy.data.images.load(fullpath)
             if isImageLoaded(img):
