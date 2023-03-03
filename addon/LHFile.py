@@ -106,7 +106,7 @@ class MeshRenderer(Component):
         self.castShadow=True
         self.receiveShadow=True
         self.localBounds=None
-        #self.sharedMaterials=[]
+        self.sharedMaterials=[]
         self.materials=[]
         
     pass
@@ -117,6 +117,14 @@ class SkinnedMeshRenderer(MeshRenderer):
         self._bones=[]
         self.rootBone=None
         pass
+
+class PhyMesh:
+    def __init__(self) -> None:
+        self._id='0'
+        self.name="Object"
+        self.transform=Transform()
+        self.meshPath=""
+
 
 class Texture:
     def __init__(self):
@@ -424,8 +432,10 @@ class LHFile:
         else:
             keys = list(obj.keys())
             for i in keys:
-                # if i=='sharedMaterials':
-                #     pass
+                if i=='sharedMaterials':
+                    pass
+                    a=1
+                    pass
                 if str.startswith(i,'_$'):
                     if i=='_$child':
                         children:list[object] = obj['_$child']
@@ -484,6 +494,21 @@ class LHFile:
                             #判断是不是ref对象
                             if "_$ref" in v:
                                 setv.append(RefObj(setv,index,v['_$ref']))
+                            elif "_$uuid" in v:
+                                src = v["_$uuid"]
+                                abssrc = normalize_path(os.path.join(self.lhpath,src))
+                                asset = assetsMgr.getAsset(abssrc)
+                                if typecls and not isinstance(asset,typecls):
+                                    print('error')
+                                else:
+                                    cc = asset
+                                setv.append(asset)
+                                # if isinstance(asset, Material):
+                                #     #添加到材质列表中
+                                #     cc.mtls.append(asset)
+                                #     pass
+
+                                pass
                             else:
                                 setobj = None
                                 if '_$type' in v:
