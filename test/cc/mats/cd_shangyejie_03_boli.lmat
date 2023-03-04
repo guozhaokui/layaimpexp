@@ -1,0 +1,144 @@
+{
+  "version": "LAYAMATERIAL:04",
+  "props": {
+    "textures": [
+      {
+        "path": "../texture/cd_sucai_bolifanshe.png",
+        "constructParams": [
+          128,
+          128,
+          1,
+          false,
+          false,
+          true
+        ],
+        "propertyParams": {
+          "filterMode": 1,
+          "wrapModeU": 0,
+          "wrapModeV": 0,
+          "anisoLevel": 1
+        },
+        "name": "u_TextureCube"
+      },
+      {
+        "path": "../texture/cd_sucai_bolifaxian.png",
+        "constructParams": [
+          64,
+          64,
+          1,
+          false,
+          false,
+          true
+        ],
+        "propertyParams": {
+          "filterMode": 1,
+          "wrapModeU": 0,
+          "wrapModeV": 0,
+          "anisoLevel": 1
+        },
+        "name": "u_Refraction"
+      }
+    ],
+    "type": "GlassMaterial",
+    "renderQueue": 2000,
+    "s_Cull": 2,
+    "s_Blend": 0,
+    "s_BlendSrc": 6,
+    "s_BlendDst": 1,
+    "s_DepthTest": 1,
+    "s_DepthWrite": true,
+    "u_TilingOffset": [
+      1,
+      1,
+      0,
+      0
+    ],
+    "u_AlphaTestValue": 0,
+    "u_MovingCenter": [
+      0,
+      0,
+      0
+    ],
+    "u_MovingRotate": [
+      0,
+      0,
+      0
+    ],
+    "u_MovingRotateT": [
+      0,
+      0
+    ],
+    "u_MovingTrans": [
+      0,
+      0,
+      0
+    ],
+    "u_MovingTransT": [
+      0,
+      0
+    ],
+    "u_MovingScale": [
+      0,
+      0,
+      0
+    ],
+    "u_MovingScaleT": [
+      0,
+      0
+    ],
+    "u_MovingRatio": [
+      1,
+      0,
+      0,
+      0
+    ],
+    "u_MovingUV": [
+      0,
+      0,
+      0,
+      0
+    ],
+    "u_MovingUVS": [
+      0,
+      0,
+      0,
+      0
+    ],
+    "u_MovingUVT": [
+      0,
+      0,
+      0,
+      0
+    ],
+    "u_MovingLight": [
+      0,
+      0,
+      0,
+      0
+    ],
+    "u_MovingDist": [
+      0,
+      0
+    ],
+    "u_MovingLcoff": [
+      1,
+      1,
+      1
+    ],
+    "u_GlassColor": [
+      0.3376449732588186,
+      0.3481623418814983,
+      0.562015503875969,
+      1
+    ],
+    "u_Refraction_Int": 0.02,
+    "u_Glass_AmbientLight_Int": 0.32,
+    "defines": [
+      "ADDTIVEFOG",
+      "NORMALCHANGE",
+      "REFRACTION",
+      "TEXTURECUBE"
+    ],
+    "shaderPath": "../cd_shangyejie_03/Glass.shader"
+  }
+}

@@ -1,0 +1,136 @@
+{
+  "version": "LAYAMATERIAL:04",
+  "props": {
+    "textures": [
+      {
+        "name": "u_MergeTexture"
+      },
+      {
+        "path": "../texture/cd_jnh_fangkuaidiban_h.png",
+        "constructParams": [
+          128,
+          128,
+          1,
+          false,
+          false,
+          true
+        ],
+        "propertyParams": {
+          "filterMode": 1,
+          "wrapModeU": 0,
+          "wrapModeV": 0,
+          "anisoLevel": 1
+        },
+        "name": "u_MergeTexture1"
+      }
+    ],
+    "type": "MergePBR",
+    "renderQueue": 2000,
+    "s_Cull": 2,
+    "s_Blend": 0,
+    "s_BlendSrc": 1,
+    "s_BlendDst": 0,
+    "s_DepthTest": 1,
+    "s_DepthWrite": true,
+    "u_AlbedoColor": [
+      0.2945736434108527,
+      0.255557621236704,
+      0.20209122047953845,
+      1
+    ],
+    "u_TilingOffset": [
+      1,
+      1,
+      0,
+      0
+    ],
+    "u_Smoothness": 0.627,
+    "u_EmissionColor": [
+      0,
+      0,
+      0,
+      1
+    ],
+    "u_EmissionIntensity": 3,
+    "u_Metallic": 0.78,
+    "u_AlphaTestValue": 0,
+    "u_EmissionRatio": 0,
+    "u_MovingCenter": [
+      0,
+      0,
+      0
+    ],
+    "u_MovingRotate": [
+      0,
+      0,
+      0
+    ],
+    "u_MovingRotateT": [
+      0,
+      0
+    ],
+    "u_MovingTrans": [
+      0,
+      0,
+      0
+    ],
+    "u_MovingTransT": [
+      0,
+      0
+    ],
+    "u_MovingScale": [
+      0,
+      0,
+      0
+    ],
+    "u_MovingScaleT": [
+      0,
+      0
+    ],
+    "u_MovingRatio": [
+      1,
+      0,
+      0,
+      0
+    ],
+    "u_MovingUV": [
+      0,
+      0,
+      0,
+      0
+    ],
+    "u_MovingUVS": [
+      0,
+      0,
+      0,
+      0
+    ],
+    "u_MovingUVT": [
+      0,
+      0,
+      0,
+      0
+    ],
+    "u_MovingLight": [
+      0,
+      0,
+      0,
+      0
+    ],
+    "u_MovingDist": [
+      0,
+      0
+    ],
+    "u_MovingLcoff": [
+      1,
+      1,
+      1
+    ],
+    "defines": [
+      "NORMALCHANGE",
+      "MERGETEXTURE",
+      "MERGETEXTURE1"
+    ],
+    "shaderPath": "../cd_shangyejie_03/MergePBR.shader"
+  }
+}
