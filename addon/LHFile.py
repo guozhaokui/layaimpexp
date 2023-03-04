@@ -2,6 +2,8 @@
 import json
 import os
 
+from numpy import NaN
+
 import LMFile
 from LMFile import Mesh
 from Loader import load,LoadType,normalize_path
@@ -136,15 +138,18 @@ class Texture:
 class Material:
     def __init__(self):
         self._src=''
-        self.diffuseColor=0
+        self.diffuseColor=[]
         self.diffuseTexture=None
         self.normalTexture=None
+        self.texturelist = []
+        self.textures = {}
         self.emissionTexture=None
         self.metallicValue=0
         self.metallicTexture=(None,'r') #贴图，通道. type()==tuple
         self.smoothValue=0
         self.smoothTexture=None
         self.blenderobj=None
+        self.shaderPath=None
 
     @property
     def src(self):
@@ -221,31 +226,40 @@ class Material:
     def parse04(self,obj,url:str):
         props = obj['props']
         type = props['type']
-        textures = props['textures']
+        textures = props['textures'] if 'textures' in props else []
         mtlpath = os.path.dirname(url)
-        if type=='PBR':
-            for t in textures:
-                name=t['name']
-                absfile= None
-                if 'path' in t:
-                    path = t['path']
-                    absfile = normalize_path(os.path.join(mtlpath,path))
+
+        for t in textures:
+            name=t['name']
+            absfile= None
+            if 'path' in t:
+                path = t['path']
+                absfile = normalize_path(os.path.join(mtlpath,path))
                 texture = assetsMgr.getAsset(absfile)
-                #texture.linear=t['constructParams'][5]
-                if name=='u_AlbedoTexture':
-                    self.diffuseTexture = texture
-                if name=='u_NormalTexture':
-                    pass
-                if name=='u_OcclusionTexture':
-                    pass
-                if name=='u_EmissionTexture':
-                    pass
-                if name=='u_MetallicGlossTexture':
-                    pass
+                self.texturelist.append(texture)
+                self.textures[name] = texture
+
+            #texture.linear=t['constructParams'][5]
+
+        if type=='PBR':
+            if 'u_AlbedoTexture' in self.textures:
+                self.diffuseTexture = self.textures['u_AlbedoTexture']
+                # u_NormalTexture  u_OcclusionTexture u_EmissionTexture u_MetallicGlossTexture
+        elif type =='MergePBR':
+            if 'u_AlbedoTexture' in self.textures:
+                self.diffuseTexture = self.textures['u_AlbedoTexture']
+                self.diffuseColor = props['u_AlbedoColor'] if 'u_AlbedoColor' in props else None
+                self.smoothValue = props['u_Smoothness'] if 'u_Smoothness' in props else NaN
+                self.metallicValue = props['u_Metallic'] if 'u_Metallic' in props else NaN
+                self.shaderPath = props['shaderPath'] if 'shaderPath' in props else None
             pass
-        else:
+        elif type =='GlassMaterial':
+            if 'u_TextureCube' in self.textures:
+                pass
+            if 'u_Refraction' in self.textures:
+                pass
             pass
-        pass
+                
 
 class Material04:
     pass
