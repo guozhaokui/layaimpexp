@@ -7,6 +7,7 @@ from numpy import NaN
 import LMFile
 from LMFile import Mesh
 from Loader import load,LoadType,normalize_path
+import struct
 
 class Vector3:
     def __init__(self,x=0,y=0,z=0):
@@ -652,12 +653,105 @@ class LHFile:
             parent.child.append(cc)
         return cc
 
+
+class LayaMePBRMaterial:
+    def __init__(self) -> None:
+        self.name=''
+        self.diffuse=[1,1,1]
+        self.smooth=0
+        self.metallic=0
+        self.emission=[0,0,0]
+
+class LHMatsFile:
+    def __init__(self) -> None:
+        self.f=None
+        #self.meshpath=''
+        self.mesh:Mesh=None
+        self.mtlnames=[]
+        self.mtls:list[LayaMePBRMaterial]=[]
+        
+    def parse(self, file:str):
+        self.mtls=[]
+        self.mtlnames=[]
+        self.lhfile=file
+        self.lhpath = os.path.dirname(file)
+        self.f = load(file,LoadType.IO)
+        len = self.readU16()
+        tag = self.readString(len)
+        if(tag=='LAYALHMATS:01'):
+            pass
+        elif (tag=='LAYALHMATS:0101'):
+            self.parse02()
+            pass
+        elif (tag=='LAYALHMATS:02'):
+            pass
+        root:Sprite3D=None
+        pass
+
+    def parse02(self):
+        strLen = self.readU16()
+        meshpath = self.readString(strLen)
+        if len(meshpath)>1 :
+            absfile = normalize_path(os.path.join(self.lhpath,meshpath))
+            self.mesh  = assetsMgr.getAsset(absfile)
+
+        cnt = self.readU16()
+        for i in range(cnt):
+            strLen = self.readU16()
+            self.mtlnames.append(self.readString(strLen))
+
+        arraylen = self.readU32()
+        for i in range(cnt):
+            cmtl = LayaMePBRMaterial()
+            cmtl.diffuse = [self.readU8(),self.readU8(),self.readU8()]
+            cmtl.metallic = self.readU8()
+            cmtl.smooth = self.readU8()
+            cmtl.emission = [self.readU8(),self.readU8(),self.readU8()]
+            self.mtls.append(cmtl)
+
+    def readString(self,len):
+        str = b''
+        for i in range(len):
+            c = self.f.read(1)
+            if not c:
+                return None
+
+            if c == b'\0' or c == b'':
+                return str.decode()
+            else:
+                str = str + c
+
+        return str.decode()
+
+    def readU16(self):
+        v = self.f.read(2)
+        if not v:
+            return None
+        return struct.unpack('H', v)[0]
+
+    def readU8(self):
+        v = self.f.read(1)
+        if not v:
+            return None
+        return struct.unpack('B', v)[0]
+
+    def readU32(self):
+        v = self.f.read(4)
+        if not v:
+            return None
+        return struct.unpack('I', v)[0]
+
+
+
 ##test
 if __name__ == "__main__":
     ff = LHFile()
     #ff.parse('D:/work/layaimpexp/test/muzhalan.lm')
-    ff.parse('D:/work/layaimpexp/test/skinnerTest/femalezhenghe.lh')
+    #ff.parse('D:/work/layaimpexp/test/skinnerTest/femalezhenghe.lh')
     #ff.parse('D:/work/laya/air3_layame/LayaMetaX/dist/res/model/42_baoting.lh')
     #ff.parse('D:/work/laya/air3_layame/LayaMetaX/dist/res/face/head/head.lh')    #3.0
     #ff.parse('D:/work/air3_layame/LayaMetaX/dist/res/layaverse/weiqiang/weiqiang7.lh')  #2.0
+
+    ff1 = LHMatsFile()
+    ff1.parse('https://oss.layabox1-beijing.layabox.com/upload/svn/resource/model/plant/shu03.lhmats')
     pass    

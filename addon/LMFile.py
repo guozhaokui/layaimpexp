@@ -56,7 +56,12 @@ class Mesh:
         self.vertexDecl:VertexDeclaration=None
         self.subMesh=[]
         
+class FileReader:
 
+    def __init__(self,f) -> None:
+        self.f = f
+        pass
+    pass
 
 class LMFile(object):
     def __init__(self):
@@ -300,6 +305,9 @@ class LMFile(object):
                     hasnormal = 'NORMAL' in meshinfo.vertexDecl.vertele
                     normaloff= 0 if not hasnormal else meshinfo.vertexDecl.vertele['NORMAL'][0]
 
+                    hasnormal8 = 'NORMAL_BYTE' in meshinfo.vertexDecl.vertele
+                    normaloff8= 0 if not hasnormal8 else meshinfo.vertexDecl.vertele['NORMAL_BYTE'][0]
+
                     hascolor= 'COLOR' in meshinfo.vertexDecl.vertele
                     coloroff=0 if not hascolor else meshinfo.vertexDecl.vertele['COLOR'][0]
 
@@ -325,6 +333,10 @@ class LMFile(object):
                             norm = struct.unpack_from('fff',vb, start+normaloff)
                             meshinfo.normal.append(norm)
                         
+                        if(hasnormal8):
+                            norm = struct.unpack_from('BBB',vb, start+normaloff)
+                            meshinfo.normal.append([norm[0]*2.0/255.0-1,norm[1]*2.0/255.0-1,norm[2]*2.0/255.0-1])
+
                         if(hascolor):
                             color = struct.unpack_from('ffff', vb, start+coloroff)
                             meshinfo.color.append(color)
