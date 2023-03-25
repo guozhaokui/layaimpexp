@@ -252,7 +252,7 @@ class LMFile(object):
                                 vx = self.readU8()
                                 vy = self.readU8()
                                 vz = self.readU8()
-                                meshinfo.normal.append((vx/127.5-1,vy/127.5-1,vz/127.5-z))
+                                meshinfo.normal.append((vx/127.5-1,vy/127.5-1,vz/127.5-1))
                                 pass
                             elif(ele=="COLOR"):
                                 #color是uint8[4]
